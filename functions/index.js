@@ -43,5 +43,14 @@ app.post('/createUser', async(req, res) => {
     res.send({ msg: "User added successfully "});
 });
 
+//Update Specific User
+app.put('/updateUser', async(req, res) => {
+    const id = req.body.id;
+    delete req.body.id;
+    const data = req.body;
+    await User.doc(id).update(data);
+    res.send({ msg: "User updated successfully "});
+});
+
 //Exports api to firestore
 exports.app = functions.https.onRequest(app);
