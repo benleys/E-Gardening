@@ -24,6 +24,24 @@ app.use(cors({ origin: true }));
 
 //--------------------INIT--------------------
 const db = admin.firestore();
+const User = db.collection('Users');
+
+//--------------------ROUTES--------------------
+//Root
+app.get('/', async(req, res) => {
+    //return res.status(200).send("Everything works!");
+    //res.sendFile(__dirname + '/public/index.html');
+    const snapshot = await User.get();
+    const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    res.send(list);
+});
+
+//Create User
+app.post('/createUser', async(req, res) => {
+    const data = req.body;
+    await User.add(data);
+    res.send({ msg: "User added successfully "});
+});
 
 //Exports api to firestore
 exports.app = functions.https.onRequest(app);
