@@ -59,5 +59,11 @@ app.delete('/deleteUser', async(req, res) => {
     res.send({ msg: "User deleted successfully"});
 });
 
+//Get All Users
+app.get('/getAllUsers', async(req, res) => {
+    const snapshot = await User.get();
+    const list = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    res.send(list);
+});
 //Exports api to firestore
 exports.app = functions.https.onRequest(app);
