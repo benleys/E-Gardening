@@ -40,7 +40,7 @@ app.get('/', async(req, res) => {
 app.post('/createUser', async(req, res) => {
     const data = req.body;
     await User.add(data);
-    res.send({ msg: "User added successfully "});
+    res.send({ msg: "User added successfully"});
 });
 
 //Update Specific User
@@ -49,7 +49,14 @@ app.put('/updateUser', async(req, res) => {
     delete req.body.id;
     const data = req.body;
     await User.doc(id).update(data);
-    res.send({ msg: "User updated successfully "});
+    res.send({ msg: "User updated successfully"});
+});
+
+//Delete Specific User
+app.delete('/deleteUser', async(req, res) => {
+    const id = req.body.id;
+    await User.doc(id).delete();
+    res.send({ msg: "User deleted successfully"});
 });
 
 //Exports api to firestore
