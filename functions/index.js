@@ -35,9 +35,15 @@ let filteredUsers = [];
 app.get('/', async(req, res) => {
     // return res.status(200).send("Everything works!");
     //res.sendFile(__dirname + '/public/index.html');
-    const usersDocument = await User.get();
-    const listOfUsers = usersDocument.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    res.send(listOfUsers);
+    try {
+      const usersDocument = await User.get();
+      const listOfUsers = usersDocument.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      return res.status(200).send({ status: "Succes", data: listOfUsers })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).send({ status: "Failed", data: error })
+    }
 });
 
 //Search Specific Users on id
@@ -56,59 +62,94 @@ app.get('/:id', async(req, res) => {
 
 //Search Specific Users on firstname
 app.get('/searchUser/:firstname', async(req, res) => {
-    const firstname = req.params.firstname;
-    // console.log(firstname);
-    // const limitResults = await User.orderBy('email').limit(3).get();
-    const limitResultsByFirstname = await User.where('firstname', '==', firstname).get();
-    limitResultsByFirstname.forEach(doc => {
-      // console.log(doc.id, '=>', doc.data());
-      filteredUsers.push(doc.id, '=>', doc.data());
-    });
-    res.json(filteredUsers);
-    filteredUsers = [];
+    try {
+      filteredUsers = [];
+      const firstname = req.params.firstname;
+      // console.log(firstname);
+      const limitResultsByFirstname = await User.where('firstname', '==', firstname).get();
+      limitResultsByFirstname.forEach(doc => {
+        // console.log(doc.id, '=>', doc.data());
+        filteredUsers.push(doc.id, '=>', doc.data());
+      });
+
+      return res.status(200).send({ status: "Succes", data: filteredUsers })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).send({ status: "Failed", data: error })
+    }
 });
 
 //Search Specific Users on firstname with ordering on lastname and limit
 app.get('/searchUser/:firstname/:limit', async(req, res) => {
-  const firstname = req.params.firstname;
-  const limit = parseInt(req.params.limit);
-  const limitResults = await User.where('firstname', '==', firstname).orderBy('lastname', 'asc').limit(limit).get();
-  limitResults.forEach(doc => {
-    // console.log(doc.id, '=>', doc.data());
-    filteredUsers.push(doc.id, '=>', doc.data());
-  });
-  res.json(filteredUsers);
-  filteredUsers = [];
+  try {
+    filteredUsers = [];
+    const firstname = req.params.firstname;
+    const limit = parseInt(req.params.limit);
+    const limitResults = await User.where('firstname', '==', firstname).orderBy('lastname', 'asc').limit(limit).get();
+    limitResults.forEach(doc => {
+      // console.log(doc.id, '=>', doc.data());
+      filteredUsers.push(doc.id, '=>', doc.data());
+    });
+
+    return res.status(200).send({ status: "Succes", data: filteredUsers })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send({ status: "Failed", data: error })
+  }
 });
 
 //Get All Users
 app.get('/getAllUsers', async(req, res) => {
-  const usersDocument = await User.get();
-  const listOfUsers = usersDocument.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  res.send(listOfUsers);
+  try {
+    const usersDocument = await User.get();
+    const listOfUsers = usersDocument.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+    return res.status(200).send({ status: "Succes", data: listOfUsers })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send({ status: "Failed", data: error })
+  }
 });
 
 //Create User
 app.post('/createUser', async(req, res) => {
-    const data = validateSignup(req.body)
-    await User.add(data.value);
-    res.send({ msg: "User added successfully"});
+    try {
+      const data = validateSignup(req.body);
+      await User.add(data.value);
+  
+      return res.status(200).send({ status: "User added successfully" })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).send({ status: "Failed", data: error })
+    }
 });
 
 //Update Specific User
 app.put('/updateUser/:id', async(req, res) => {
-    const id = req.params.id;
-    // delete req.body.id;
-    const data = validateUpdate(req.body);
-    await User.doc(id).update(data.value);
-    res.send({ msg: "User updated successfully"});
+    try {
+      const id = req.params.id;
+      // delete req.body.id;
+      const data = validateUpdate(req.body);
+      await User.doc(id).update(data.value);
+  
+      return res.status(200).send({ status: "User updated successfully" })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).send({ status: "Failed", data: error })
+    }
 });
 
 //Delete Specific User
 app.delete('/deleteUser/:id', async(req, res) => {
-    const id = req.params.id;
-    await User.doc(id).delete();
-    res.send({ msg: "User deleted successfully"});
+    try {
+      const id = req.params.id;
+      await User.doc(id).delete();
+  
+      return res.status(200).send({ status: "User deleted successfully" })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).send({ status: "Failed", data: error })
+    }
 });
 
 //Exports api to firestore
