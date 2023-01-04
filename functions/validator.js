@@ -11,9 +11,9 @@ const signupSchema = Joi.object({
 });
 
 const updateSchema = Joi.object({
-    firstname: Joi.string().required(),
-    lastname: Joi.string().required(),
-    email: Joi.string().email().required(),
+    firstname: Joi.string(),
+    lastname: Joi.string(),
+    email: Joi.string().email(),
 });
 exports.validateSignup = validator(signupSchema);
 exports.validateUpdate = validator(updateSchema);
