@@ -15,6 +15,8 @@ const cors = require("cors");
 //Joi validation
 const Joi = require("joi");
 const { validateSignup, validateUpdate } = require ("./validator");
+//Bcrypt
+const bcrypt = require('bcrypt');
 
 //--------------------MAIN APP--------------------
 const app = express();
@@ -115,7 +117,21 @@ app.get('/getAllUsers', async(req, res) => {
 app.post('/createUser', async(req, res) => {
     try {
       const data = validateSignup(req.body);
-      await User.add(data.value);
+      if(data.error){
+        return res.status(500).send({ status: "Failed", data: data.error.details })
+      }
+
+      const salt = bcrypt.genSaltSync(10);
+      const hashPassword = bcrypt.hashSync(data.value.password, salt);
+
+      const result = {
+        "firstname": data.value.firstname,
+        "lastname": data.value.lastname,
+        "email": data.value.email,
+        "password": hashPassword,
+      }
+      // console.log(result);
+      await User.add(result);
   
       return res.status(200).send({ status: "User added successfully" })
     } catch (error) {
@@ -128,8 +144,11 @@ app.post('/createUser', async(req, res) => {
 app.put('/updateUser/:id', async(req, res) => {
     try {
       const id = req.params.id;
-      // delete req.body.id;
       const data = validateUpdate(req.body);
+      if(data.error){
+        return res.status(500).send({ status: "Failed", data: data.error.details })
+      }
+      // console.log(data);
       await User.doc(id).update(data.value);
   
       return res.status(200).send({ status: "User updated successfully" })
