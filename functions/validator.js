@@ -15,5 +15,18 @@ const updateSchema = Joi.object({
     lastname: Joi.string(),
     email: Joi.string().email(),
 });
+
+const postSchema = Joi.object({
+    title: Joi.string().required(),
+    description: Joi.string().required(),
+});
+
+const updatePostSchema = Joi.object({
+    title: Joi.string(),
+    description: Joi.string(),
+});
+
 exports.validateSignup = validator(signupSchema);
 exports.validateUpdate = validator(updateSchema);
+exports.validatePost = validator(postSchema);
+exports.validateUpdatePost = validator(updatePostSchema);
