@@ -155,6 +155,7 @@ app.post('/createUser', async(req, res) => {
         "firstname": data.value.firstname,
         "lastname": data.value.lastname,
         "email": data.value.email,
+        "phonenumber": data.value.phonenumber,
         "password": hashPassword,
       }
       // console.log(result);
