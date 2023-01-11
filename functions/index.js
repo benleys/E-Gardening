@@ -14,7 +14,7 @@ const express = require("express");
 const cors = require("cors");
 //Joi validation
 const Joi = require("joi");
-const { validateSignup, validateUpdate, validatePost, validateUpdatePost } = require ("./validator");
+const { validateSignup, validateUpdate, validateFeedback, validateUpdateFeedback } = require ("./validator");
 //Bcrypt
 const bcrypt = require('bcrypt');
 
@@ -30,9 +30,9 @@ app.use(cors({ origin: true }));
 //--------------------INIT--------------------
 const db = admin.firestore();
 const User = db.collection('Users');
-const Post = db.collection('Posts');
+const Feedback = db.collection('Feedback');
 let filteredUsers = [];
-let filteredPosts = [];
+let filteredFeedback = [];
 
 //--------------------ROUTES--------------------
 //Root
@@ -83,6 +83,28 @@ app.get('/searchUser/:firstname', async(req, res) => {
       console.log(error)
       return res.status(500).send({ status: "Failed", data: error })
     }
+});
+
+//Search Specific Users on firstname and lastname
+app.get('/searchUser/:firstname/:lastname', async(req, res) => {
+  try {
+    filteredUsers = [];
+    const firstnamedata = req.params.firstname;
+    const firstname = firstnamedata.charAt(0).toUpperCase() + firstnamedata.slice(1);
+    const lastnamedata = req.params.lastname;
+    const lastname = lastnamedata.charAt(0).toUpperCase() + lastnamedata.slice(1);
+    // console.log(firstname);
+    const limitResultsByName = await User.where('firstname', '==', firstname).where('lastname', '==', lastname).get();
+    limitResultsByName.forEach(doc => {
+      // console.log(doc.id, '=>', doc.data());
+      filteredUsers.push(doc.id, '=>', doc.data());
+    });
+
+    return res.status(200).send({ status: "Succes", data: filteredUsers })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send({ status: "Failed", data: error })
+  }
 });
 
 //Search Specific Users on firstname with ordering on lastname and limit
@@ -176,13 +198,13 @@ app.delete('/deleteUser/:id', async(req, res) => {
     }
 });
 
-//--------------------POSTS--------------------
-//Search Specific POSTS on id
-app.get('/postid/:postid', async(req, res) => {
+//--------------------FEEDBACK--------------------
+//Search Specific Feedback on id
+app.get('/feedbackid/:id', async(req, res) => {
   try {
-    const postID = Post.doc(req.params.postid);
-    let postDetail = await postID.get();
-    let response = postDetail.data();
+    const feedbackID = Feedback.doc(req.params.id);
+    let feedbackDetail = await feedbackID.get();
+    let response = feedbackDetail.data();
 
     return res.status(200).send({ status: "Succes", data: response })
   } catch (error) {
@@ -191,101 +213,99 @@ app.get('/postid/:postid', async(req, res) => {
   }
 });
 
-//Search Specific POSTS on title
-app.get('/searchPost/:title', async(req, res) => {
+//Search Specific Feedback on rating
+app.get('/searchFeedback/:rating', async(req, res) => {
   try {
-    filteredPosts = [];
-    const titledata = req.params.title;
-    const title = titledata.charAt(0).toUpperCase() + titledata.slice(1);
+    filteredFeedback = [];
+    const rating = parseInt(req.params.rating);
     // console.log(title);
-    const limitResultsByTitle = await Post.where('title', '==', title).get();
-    limitResultsByTitle.forEach(doc => {
+    const limitResultsByRating = await Feedback.where('rating', '==', rating).get();
+    limitResultsByRating.forEach(doc => {
       // console.log(doc.id, '=>', doc.data());
-      filteredPosts.push(doc.id, '=>', doc.data());
+      filteredFeedback.push(doc.id, '=>', doc.data());
     });
 
-    return res.status(200).send({ status: "Succes", data: filteredPosts })
+    return res.status(200).send({ status: "Succes", data: filteredFeedback })
   } catch (error) {
     console.log(error)
     return res.status(500).send({ status: "Failed", data: error })
   }
 });
 
-//Search Specific POSTS on title with ordering on creation date and limit
-app.get('/searchPost/:title/:limit', async(req, res) => {
+//Search Feedback with rating starting at ... and ending at ... (ordered on rating) 
+app.get('/searchFeedback/:start/:end', async(req, res) => {
   try {
-    filteredPosts = [];
-    const titledata = req.params.title;
-    const title = titledata.charAt(0).toUpperCase() + titledata.slice(1);
-    const limit = parseInt(req.params.limit);
-    const limitResults = await Post.where('title', '==', title).orderBy('description', 'asc').limit(limit).get();
+    filteredFeedback = [];
+    const offset = parseInt(req.params.start);
+    const offset2 = parseInt(req.params.end);
+    const limitResults = await Feedback.orderBy('rating', 'asc').startAt(offset).endAt(offset2).get();
     limitResults.forEach(doc => {
       // console.log(doc.id, '=>', doc.data());
-      filteredPosts.push(doc.id, '=>', doc.data());
+      filteredFeedback.push(doc.id, '=>', doc.data());
     });
 
-    return res.status(200).send({ status: "Succes", data: filteredPosts })
+    return res.status(200).send({ status: "Succes", data: filteredFeedback })
   } catch (error) {
     console.log(error)
     return res.status(500).send({ status: "Failed", data: error })
   }
 });
 
-//Get All POSTS
-app.get('/getAllPosts', async(req, res) => {
+//Get All Feedbacks
+app.get('/getAllFeedbacks', async(req, res) => {
   try {
-    const postsDocument = await Post.get();
-    const listOfPosts = postsDocument.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const feedbacksDocument = await Feedback.get();
+    const listOfFeedbacks = feedbacksDocument.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-    return res.status(200).send({ status: "Succes", data: listOfPosts })
+    return res.status(200).send({ status: "Succes", data: listOfFeedbacks })
   } catch (error) {
     console.log(error)
     return res.status(500).send({ status: "Failed", data: error })
   }
 });
 
-//Create POST
-app.post('/createPost', async(req, res) => {
+//Create Feedbacj
+app.post('/createFeedback', async(req, res) => {
   try {
-    const data = validatePost(req.body);
+    const data = validateFeedback(req.body);
     if(data.error){
       return res.status(500).send({ status: "Failed", data: data.error.details })
     }
     // console.log(result);
-    await Post.add(data.value);
+    await Feedback.add(data.value);
 
-    return res.status(200).send({ status: "Post added successfully" })
+    return res.status(200).send({ status: "Feedback added successfully" })
   } catch (error) {
     console.log(error)
     return res.status(500).send({ status: "Failed", data: error })
   }
 });
 
-//Update Specific POST
-app.put('/updatePost/:postid', async(req, res) => {
+//Update Specific Feedback
+app.put('/updateFeedback/:feedbackid', async(req, res) => {
   try {
-    const postid = req.params.postid;
-    const data = validateUpdatePost(req.body);
+    const feedbackid = req.params.feedbackid;
+    const data = validateUpdateFeedback(req.body);
     if(data.error){
       return res.status(500).send({ status: "Failed", data: data.error.details })
     }
     // console.log(data);
-    await Post.doc(postid).update(data.value);
+    await Feedback.doc(feedbackid).update(data.value);
 
-    return res.status(200).send({ status: "Post updated successfully" })
+    return res.status(200).send({ status: "Feedback updated successfully" })
   } catch (error) {
     console.log(error)
     return res.status(500).send({ status: "Failed", data: error })
   }
 });
 
-//Delete Specific POST
-app.delete('/deletePost/:postid', async(req, res) => {
+//Delete Specific Feedback
+app.delete('/deleteFeedback/:feedbackid', async(req, res) => {
   try {
-    const postid = req.params.postid;
-    await Post.doc(postid).delete();
+    const feedbackid = req.params.feedbackid;
+    await Feedback.doc(feedbackid).delete();
 
-    return res.status(200).send({ status: "Post deleted successfully" })
+    return res.status(200).send({ status: "Feedback deleted successfully" })
   } catch (error) {
     console.log(error)
     return res.status(500).send({ status: "Failed", data: error })

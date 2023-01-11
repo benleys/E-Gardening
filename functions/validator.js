@@ -16,17 +16,19 @@ const updateSchema = Joi.object({
     email: Joi.string().email(),
 });
 
-const postSchema = Joi.object({
+const feedbackSchema = Joi.object({
+    rating: Joi.number().integer().min(0).max(5).required(),
     title: Joi.string().required(),
     description: Joi.string().required(),
 });
 
-const updatePostSchema = Joi.object({
+const updateFeedbackSchema = Joi.object({
+    rating: Joi.number().integer().min(0).max(5),
     title: Joi.string(),
     description: Joi.string(),
 });
 
 exports.validateSignup = validator(signupSchema);
 exports.validateUpdate = validator(updateSchema);
-exports.validatePost = validator(postSchema);
-exports.validateUpdatePost = validator(updatePostSchema);
+exports.validateFeedback = validator(feedbackSchema);
+exports.validateUpdateFeedback = validator(updateFeedbackSchema);
