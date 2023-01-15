@@ -43,7 +43,10 @@ app.get('/', async(req, res) => {
       const usersDocument = await User.get();
       const listOfUsers = usersDocument.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-      return res.status(200).send({ status: "Succes", data: listOfUsers })
+      const feedbackDocument = await Feedback.get();
+      const listOfFeedback = feedbackDocument.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      return res.status(200).send({ status: "Succes", user_data: listOfUsers, feedback_data: listOfFeedback })
     } catch (error) {
       console.log(error)
       return res.status(500).send({ status: "Failed", data: error })
@@ -108,7 +111,7 @@ app.get('/searchUser/:firstname/:lastname', async(req, res) => {
 });
 
 //Search Specific Users on firstname with ordering on lastname and limit
-app.get('/searchUser/:firstname/:limit', async(req, res) => {
+app.get('/searchLimitUser/:firstname/:limit', async(req, res) => {
   try {
     filteredUsers = [];
     const firstnamedata = req.params.firstname;
@@ -265,7 +268,7 @@ app.get('/getAllFeedbacks', async(req, res) => {
   }
 });
 
-//Create Feedbacj
+//Create Feedback
 app.post('/createFeedback', async(req, res) => {
   try {
     const data = validateFeedback(req.body);
